@@ -1,0 +1,90 @@
+{% extends "layouts/base.html" %}
+{% block content %}
+<div class="flex flex-col items-center justify-center">
+    <h1 class="text-4xl font-bold text-center">Attendance</h1>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="alert alert-{{ messages[0][0] == 'message' and 'success' or messages[0][0] }} mt-3">
+                <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        class="h-6 w-6 shrink-0 stroke-current"
+                        fill="none"
+                        viewBox="0 0 24 24">
+                    <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <span>
+                    {% for message in messages %}
+                        {{ message }}
+                    {% endfor %}
+                </span>
+            </div>
+        {% endif %}
+    {% endwith %}
+
+    <div class="py-8 flex flex-col items-center justify-center gap-3">
+
+        <video id="video" autoplay></video>
+        <canvas hidden id="canvas"></canvas>
+        <form id="upload-form" action="{{ url_for('attendance') }}" method="POST" enctype="multipart/form-data">
+            {{ form.hidden_tag() }}
+            <input type="file" hidden name="face" id="imageData">
+            <a class="btn btn-accent" href="{{ url_for('home') }}">
+                Back
+            </a>
+            <button type="button" class="btn btn-primary" id="capture">Capture and Upload</button>
+            <button type="submit" id="submit" style="display:none;">Submit</button>
+        </form>
+    </div>
+
+    <script>
+        const video = document.getElementById('video');
+        const canvas = document.getElementById('canvas');
+        const captureButton = document.getElementById('capture');
+        const context = canvas.getContext('2d');
+        const submitButton = document.getElementById('submit');
+        const imageDataInput = document.getElementById('imageData');
+
+        // Set up the video stream
+        navigator.mediaDevices.getUserMedia({ video: true })
+            .then(stream => {
+                video.srcObject = stream;
+                video.play();
+            })
+            .catch(err => {
+                console.error("Error accessing webcam: ", err);
+            });
+
+        video.addEventListener('loadeddata', () => {
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+        });
+
+        captureButton.addEventListener('click', () => {
+            // Capture the frame and draw the face rectangles
+            context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+            // Convert canvas to Blob
+            canvas.toBlob(blob => {
+                // Create a file from the blob
+                const file = new File([blob], 'capture.png', { type: 'image/png' });
+
+                // Create a DataTransfer to hold the file
+                const dataTransfer = new DataTransfer();
+                dataTransfer.items.add(file);
+
+                // Set the file input's files to the DataTransfer's files
+                imageDataInput.files = dataTransfer.files;
+
+                // Show the submit button and submit the form
+                submitButton.click();
+            }, 'image/png');
+        });
+    </script>
+
+</div>
+{% endblock %}

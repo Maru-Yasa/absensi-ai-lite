@@ -1,0 +1,17 @@
+{
+  "name": "absensi-ai-lite",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "dev": "npx tailwindcss -i ./public/_app.css -o ./public/app.css --watch",
+    "build": "npx tailwindcss -i ./public/_app.css -o ./public/app.css --minify"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "daisyui": "^4.12.10",
+    "tailwindcss": "^3.4.7"
+  }
+}

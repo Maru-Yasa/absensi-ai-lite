@@ -1,0 +1,7 @@
+uploads/*
+facedata/*
+.facedata/*
+.venv
+.env
+node_modules
+.idea

@@ -1,0 +1,62 @@
+{% extends "layouts/base.html" %}
+{% block content %}
+<div class="flex flex-col items-center justify-center">
+    <h1 class="text-4xl font-bold text-center">Registration</h1>
+
+    <form method="POST" action="/registration" enctype="multipart/form-data">
+        {{ form.hidden_tag() }}
+        <div class="py-8 flex flex-col items-center justify-center gap-3">
+            <div class="w-full">
+                <label class="block text-gray-700 text-sm font-bold mb-2" for="name">
+                    Name
+                </label>
+                {{ form.name(class="input input-bordered w-full") }}
+                {% if 'name' in errors %}
+                <ul class="text-red-500 text-xs italic">
+                    {% for error in errors['name'] %}
+                    <li>{{ error }}</li>
+                    {% endfor %}
+                </ul>
+                {% endif %}
+            </div>
+            <div class="w-full">
+                <label class="block text-gray-700 text-sm font-bold mb-2" for="email">
+                    Email
+                </label>
+                {{ form.email(class="input input-bordered w-full") }}
+                {% if 'email' in errors %}
+                <ul class="text-red-500 text-xs italic">
+                    {% for error in errors['email'] %}
+                    <li>{{ error }}</li>
+                    {% endfor %}
+                </ul>
+                {% endif %}
+            </div>
+
+            <div>
+                <label class="block text-gray-700 text-sm font-bold mb-2" for="face">
+                    Face Image
+                </label>
+                {{ form.face(class="file-input file-input-bordered file-input-primary w-full") }}
+                {% if 'face' in errors %}
+                <ul class="text-red-500 text-xs italic">
+                    {% for error in errors['email'] %}
+                    <li>{{ error }}</li>
+                    {% endfor %}
+                </ul>
+                {% endif %}
+            </div>
+
+            <div class="w-full flex justify-between py-2">
+                <a href="/" class="btn btn-accent">
+                    Back
+                </a>
+                <button type="submit" class="btn btn-primary">
+                    Submit
+                </button>
+            </div>
+        </div>
+    </form>
+
+</div>
+{% endblock %}
