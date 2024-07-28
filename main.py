@@ -1,4 +1,3 @@
-import cv2
 from flask import Flask, render_template, request, flash
 from forms.RegistrationForm import RegistrationForm
 from forms.AttandanceForm import AttendanceForm
@@ -9,8 +8,17 @@ import psycopg2.extras
 import os
 import psycopg2
 import uuid
+import sqlite3
 
 load_dotenv()
+
+
+def dict_factory(cursor, row):
+    d = {}
+    for idx, col in enumerate(cursor.description):
+        d[col[0]] = row[idx]
+    return d
+
 
 app = Flask(__name__, static_folder='public')
 app.config['SECRET_KEY'] = 'secret'
@@ -18,14 +26,10 @@ app.config['UPLOAD_FOLDER'] = 'uploads'
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16 MB limit
 
 os.environ['PINECONE_API_KEY'] = os.getenv('PINECONE_API_KEY')
-conn = psycopg2.connect(
-    host=os.getenv('DB_HOST'),
-    port=os.getenv('DB_PORT'),
-    database=os.getenv('DB_DATABASE'),
-    user=os.getenv('DB_USERNAME'),
-    password=os.getenv('DB_PASSWORD'))
 
-cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+conn = sqlite3.connect("database.sqlite3", check_same_thread=False)
+conn.row_factory = dict_factory
+cur = conn.cursor()
 faceDB = FaceDB(
     metric='euclidean',
     database_backend='pinecone',
@@ -71,7 +75,7 @@ def registration():
             # Insert the data into the database
             cur.execute("""
             INSERT INTO users (face_id, name, email, face_image)
-            VALUES (%s, %s, %s, %s)
+            VALUES (?, ?, ?, ?)
             """, (face_id, form.name.data, form.email.data, file_path))
             conn.commit()
 
@@ -86,12 +90,13 @@ def attendance_history():
     cur.execute(""" 
         SELECT u.name, u.email, u.face_id, a.created_at
         FROM users u
-        JOIN attendances a ON u.id::int = a.user_id::int
+        JOIN attendances a ON u.id = a.user_id
         ORDER BY a.created_at DESC
     """)
     attendances = cur.fetchall()
     print(attendances)
     return render_template('history.html', attendances=attendances)
+
 
 @app.route('/attendance', methods=['GET', 'POST'])
 def attendance():
@@ -126,8 +131,10 @@ def attendance():
                     flash('Face not recognized!', 'error')
                     return render_template('attendances.html')
 
-                cur.execute("SELECT id, name FROM users WHERE face_id = '" + str(result['id']) + "'")
+                print(result)
+                cur.execute("SELECT id, name FROM users WHERE face_id = ?", (result['id'],))
                 user = cur.fetchone()
+                print(user)
 
                 if user is None:
                     flash('User not found!')
@@ -135,7 +142,7 @@ def attendance():
 
                 cur.execute("""
                 INSERT INTO attendances (user_id)
-                VALUES (%s)
+                VALUES (?)
                 """, (user['id'],))
                 conn.commit()
 
