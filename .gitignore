@@ -5,3 +5,11 @@ facedata/*
 .env
 node_modules
 .idea
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+*.so
+*~
+.DS_Store
+*.sqlite3
